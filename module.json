@@ -1,0 +1,16 @@
+{
+    "name": "VmsOpenOps",
+    "alias": "vmsopenops",
+    "description": "Open Source Operations Module for phpVMS - Jumpseats and Aircraft Ferries with distance-based pricing",
+    "keywords": ["operations", "jumpseat", "ferry", "phpvms", "module"],
+    "active": 1,
+    "order": 0,
+    "providers": [
+        "Modules\\VmsOpenOps\\Providers\\AppServiceProvider",
+        "Modules\\VmsOpenOps\\Providers\\EventServiceProvider",
+        "Modules\\VmsOpenOps\\Providers\\RouteServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

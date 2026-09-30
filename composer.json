@@ -1,0 +1,28 @@
+{
+    "name": "your-vendor/vmsopenops-module",
+    "type": "phpvms-module",
+    "description": "Distance-based jumpseat and ferry module for phpVMS",
+    "authors": [
+        {
+            "name": "Your Name",
+            "email": "your@email.com"
+        }
+    ],
+    "require": {
+        "composer/installers": "~1.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\VmsOpenOps\\Providers\\AppServiceProvider",
+                "Modules\\VmsOpenOps\\Providers\\EventServiceProvider",
+                "Modules\\VmsOpenOps\\Providers\\RouteServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\VmsOpenOps\\": "."
+        }
+    }
+}
