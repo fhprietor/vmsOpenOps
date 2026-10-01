@@ -21,7 +21,8 @@ class OperationsController extends Controller
     public function __construct(FinanceService $financeService)
     {
         $this->financeService = $financeService;
-        $this->middleware('ability:admin,admin-access');
+        // La guarda ability:admin,admin-access la aplica el grupo de rutas de
+        // admin (RouteServiceProvider); no se repite aqui.
     }
     
     public function index(Request $request)

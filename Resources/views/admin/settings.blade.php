@@ -17,20 +17,20 @@
                 
                 <div class="form-group">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="jumpseat_enabled" name="jumpseat_enabled" value="1" {{ setting('vms_open_ops_jumpseat_enabled', true) ? 'checked' : '' }}>
+                        <input type="checkbox" class="custom-control-input" id="jumpseat_enabled" name="jumpseat_enabled" value="1" {{ setting('vms_open_ops_jumpseat_enabled', config('vmsopenops.jumpseat.enabled')) ? 'checked' : '' }}>
                         <label class="custom-control-label" for="jumpseat_enabled">Enable Jumpseat Operations</label>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Jumpseat Cost per Nautical Mile (cents)</label>
-                    <input type="number" name="jumpseat_cost_per_nm" class="form-control" value="{{ setting('vms_open_ops_jumpseat_cost_per_nm', 250) }}" min="0">
+                    <input type="number" name="jumpseat_cost_per_nm" class="form-control" value="{{ setting('vms_open_ops_jumpseat_cost_per_nm', config('vmsopenops.jumpseat.cost_per_nm')) }}" min="0">
                     <small class="text-muted">Example: 250 = $2.50 per NM</small>
                 </div>
 
                 <div class="form-group">
                     <label>Jumpseat Minimum Cost (cents)</label>
-                    <input type="number" name="jumpseat_min_cost" class="form-control" value="{{ setting('vms_open_ops_jumpseat_min_cost', 5000) }}" min="0">
+                    <input type="number" name="jumpseat_min_cost" class="form-control" value="{{ setting('vms_open_ops_jumpseat_min_cost', config('vmsopenops.jumpseat.min_cost')) }}" min="0">
                     <small class="text-muted">Floor applied regardless of distance. Example: 5000 = $50.00</small>
                 </div>
 
@@ -39,38 +39,38 @@
                 
                 <div class="form-group">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="ferry_enabled" name="ferry_enabled" value="1" {{ setting('vms_open_ops_ferry_enabled', true) ? 'checked' : '' }}>
+                        <input type="checkbox" class="custom-control-input" id="ferry_enabled" name="ferry_enabled" value="1" {{ setting('vms_open_ops_ferry_enabled', config('vmsopenops.ferry.enabled')) ? 'checked' : '' }}>
                         <label class="custom-control-label" for="ferry_enabled">Enable Ferry Operations</label>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Ferry Cost per Nautical Mile (cents)</label>
-                    <input type="number" name="ferry_cost_per_nm" class="form-control" value="{{ setting('vms_open_ops_ferry_cost_per_nm', 500) }}" min="0">
+                    <input type="number" name="ferry_cost_per_nm" class="form-control" value="{{ setting('vms_open_ops_ferry_cost_per_nm', config('vmsopenops.ferry.cost_per_nm')) }}" min="0">
                     <small class="text-muted">Example: 500 = $5.00 per NM</small>
                 </div>
 
                 <div class="form-group">
                     <label>Ferry Minimum Cost — Light aircraft (MTOW ≤ 7,000 kg) (cents)</label>
-                    <input type="number" name="ferry_min_cost_light" class="form-control" value="{{ setting('vms_open_ops_ferry_min_cost_light', 20000) }}" min="0">
+                    <input type="number" name="ferry_min_cost_light" class="form-control" value="{{ setting('vms_open_ops_ferry_min_cost_light', config('vmsopenops.ferry.min_cost_light')) }}" min="0">
                     <small class="text-muted">Example: 20000 = $200.00</small>
                 </div>
 
                 <div class="form-group">
                     <label>Ferry Minimum Cost — Medium aircraft (MTOW 7,001–136,000 kg, e.g. A320) (cents)</label>
-                    <input type="number" name="ferry_min_cost_medium" class="form-control" value="{{ setting('vms_open_ops_ferry_min_cost_medium', 50000) }}" min="0">
+                    <input type="number" name="ferry_min_cost_medium" class="form-control" value="{{ setting('vms_open_ops_ferry_min_cost_medium', config('vmsopenops.ferry.min_cost_medium')) }}" min="0">
                     <small class="text-muted">Example: 50000 = $500.00</small>
                 </div>
 
                 <div class="form-group">
                     <label>Ferry Minimum Cost — Heavy aircraft (MTOW > 136,000 kg) (cents)</label>
-                    <input type="number" name="ferry_min_cost_heavy" class="form-control" value="{{ setting('vms_open_ops_ferry_min_cost_heavy', 100000) }}" min="0">
+                    <input type="number" name="ferry_min_cost_heavy" class="form-control" value="{{ setting('vms_open_ops_ferry_min_cost_heavy', config('vmsopenops.ferry.min_cost_heavy')) }}" min="0">
                     <small class="text-muted">Example: 100000 = $1,000.00</small>
                 </div>
 
                 <div class="form-group">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="ferry_require_certification" name="ferry_require_certification" value="1" {{ setting('vms_open_ops_ferry_require_certification', true) ? 'checked' : '' }}>
+                        <input type="checkbox" class="custom-control-input" id="ferry_require_certification" name="ferry_require_certification" value="1" {{ setting('vms_open_ops_ferry_require_certification', config('vmsopenops.ferry.require_certification')) ? 'checked' : '' }}>
                         <label class="custom-control-label" for="ferry_require_certification">Require Aircraft Certification</label>
                     </div>
                     <small class="text-muted">Pilots must be certified on the subfleet to request a ferry</small>
@@ -81,14 +81,14 @@
                 
                 <div class="form-group">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="require_reason" name="require_reason" value="1" {{ setting('vms_open_ops_require_reason', true) ? 'checked' : '' }}>
+                        <input type="checkbox" class="custom-control-input" id="require_reason" name="require_reason" value="1" {{ setting('vms_open_ops_require_reason', config('vmsopenops.require_reason')) ? 'checked' : '' }}>
                         <label class="custom-control-label" for="require_reason">Require Reason for Operations</label>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Maximum Reason Length (characters)</label>
-                    <input type="number" name="max_reason_length" class="form-control" value="{{ setting('vms_open_ops_max_reason_length', 500) }}" min="10" max="1000">
+                    <input type="number" name="max_reason_length" class="form-control" value="{{ setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length')) }}" min="10" max="1000">
                 </div>
                 
                 <div class="form-group">

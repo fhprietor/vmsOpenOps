@@ -70,7 +70,6 @@ API, así que lo que se cotiza es lo que se cobra.
 | GET | `/vmsopenops/jumpseat` | `Frontend\JumpseatController@index` |
 | GET | `/vmsopenops/jumpseat/create` | `@create` |
 | POST | `/vmsopenops/jumpseat` | `@store` |
-| POST | `/vmsopenops/jumpseat/preview` | `@preview` |
 | DELETE | `/vmsopenops/jumpseat/{id}` | `@cancel` |
 | GET | `/vmsopenops/ferry` | `Frontend\FerryController@index` |
 | GET | `/vmsopenops/ferry/create` | `@create` |
@@ -136,11 +135,15 @@ Relaciones: `user`, `fromAirport`, `toAirport`, `aircraft`, `subfleet`,
 
 ## Settings (grupo `VmsOpenOps`)
 
-Los valores en tiempo de ejecución salen **siempre de la tabla `settings`** vía
-`setting()`. **`Config/config.php` no lo lee ningún código** (solo sirve de
-documentación de los valores previstos).
+Dos capas:
 
-| Clave | Sembrada por migración | Por defecto en código |
+- **`Config/config.php`** define los **valores por defecto** (único sitio donde
+  viven). El provider lo registra como `config('vmsopenops.*')`.
+- La tabla **`settings`** guarda el valor efectivo (lo que se edita en
+  Admin → Settings). El código lee siempre con
+  `setting('vms_open_ops_x', config('vmsopenops.y'))`.
+
+| Clave | Sembrada por migración | Por defecto (`config`) |
 |---|---|---|
 | `vms_open_ops.jumpseat.enabled` | sí (`true`) | `true` |
 | `vms_open_ops.jumpseat.cost_per_nm` | sí (`250`) | `250` |
@@ -227,16 +230,22 @@ en inglés escritos a mano.
    `pireps.passengers`/`pireps.cargo`) y sus helpers se han eliminado.
 9. **Caracteres sueltos `要`** eliminados de los tres `<thead>`, y quitado el
    import sin usar `AircraftStatus` del controlador de admin.
+10. **Guardas redundantes**: `ability:admin,admin-access` estaba aplicada tres
+    veces (grupo de rutas, `admin.php` y constructor del controlador). Se
+    conserva solo la del grupo (`RouteServiceProvider`); verificado que un
+    usuario sin rol admin sigue recibiendo 302.
+11. **`Config/config.php` ahora sí se usa**: es la fuente de los valores por
+    defecto (`setting('vms_open_ops_x', config('vmsopenops.y'))`), incluidos los
+    mínimos que antes solo estaban en código, y se han quitado los defaults
+    duplicados de controladores, modelo, notificaciones y vistas.
+12. **Previews duplicados eliminados**: las vistas (incluidos los overrides del
+    tema vholar) cotizan con la **API**, así que la ruta
+    `POST /vmsopenops/jumpseat/preview` y los métodos `preview()` de
+    `JumpseatController` y `FerryController` se han eliminado. Queda un único
+    preview por operación (`api.vmsopenops.api.{jumpseat,ferry}.preview`).
 
 ### Pendiente
 
-- Guardas redundantes: `ability:admin,admin-access` está en el grupo de rutas y
-  repetida en `admin.php` (y en el constructor del controlador de admin): es
-  inocuo, pero sobra.
-- `Config/config.php` sigue **sin leerse** en runtime (los valores salen de
-  `settings`); o se usa como fuente de defaults o se elimina.
-- `Frontend\FerryController@preview` no tiene ruta (la vista de ferry cotiza con
-  la API). Hoy es coherente con `OpsPricing`, pero es código muerto.
 - El módulo no tiene `Services/` ni tests.
 - `vms_open_ops.discord_staff_webhook` es un **secreto** guardado en la tabla
   `settings`: no debe acabar en git.

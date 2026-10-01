@@ -245,7 +245,7 @@ $(document).ready(function () {
             return false;
         }
         
-        @if(setting('vms_open_ops_require_reason', true))
+        @if(setting('vms_open_ops_require_reason', config('vmsopenops.require_reason')))
         const reason = $('input[name="reason"]').val().trim();
         if (!reason) {
             e.preventDefault();

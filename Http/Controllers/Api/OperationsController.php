@@ -218,12 +218,12 @@ class OperationsController extends Controller
      */
     public function storeJumpseat(Request $request)
     {
-        if (!setting('vms_open_ops_jumpseat_enabled', true)) {
+        if (!setting('vms_open_ops_jumpseat_enabled', config('vmsopenops.jumpseat.enabled'))) {
             return response()->json(['success' => false, 'message' => 'Jumpseat operations are disabled'], 403);
         }
         
-        $requireReason = setting('vms_open_ops_require_reason', true);
-        $maxReasonLength = setting('vms_open_ops_max_reason_length', 500);
+        $requireReason = setting('vms_open_ops_require_reason', config('vmsopenops.require_reason'));
+        $maxReasonLength = setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length'));
         
         $rules = [
             'to_airport_id' => 'required|exists:airports,id',
@@ -345,12 +345,12 @@ class OperationsController extends Controller
      */
     public function storeFerry(Request $request)
     {
-        if (!setting('vms_open_ops_ferry_enabled', true)) {
+        if (!setting('vms_open_ops_ferry_enabled', config('vmsopenops.ferry.enabled'))) {
             return response()->json(['success' => false, 'message' => 'Ferry operations are disabled'], 403);
         }
         
-        $requireReason = setting('vms_open_ops_require_reason', true);
-        $maxReasonLength = setting('vms_open_ops_max_reason_length', 500);
+        $requireReason = setting('vms_open_ops_require_reason', config('vmsopenops.require_reason'));
+        $maxReasonLength = setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length'));
         
         $rules = [
             'aircraft_id' => 'required|exists:aircraft,id',
@@ -389,7 +389,7 @@ class OperationsController extends Controller
             return response()->json(['success' => false, 'message' => 'Aircraft already at your airport'], 400);
         }
         
-        $requireCertification = setting('vms_open_ops_ferry_require_certification', true);
+        $requireCertification = setting('vms_open_ops_ferry_require_certification', config('vmsopenops.ferry.require_certification'));
         if ($requireCertification) {
             $isCertified = $aircraft->subfleet->ranks->contains('id', $user->rank_id);
             if (!$isCertified) {
@@ -551,7 +551,7 @@ class OperationsController extends Controller
         
         $subfleet = Subfleet::with(['ranks'])->find($request->subfleet_id);
         
-        $requireCertification = setting('vms_open_ops_ferry_require_certification', true);
+        $requireCertification = setting('vms_open_ops_ferry_require_certification', config('vmsopenops.ferry.require_certification'));
         if ($requireCertification) {
             $isCertified = $subfleet->ranks->contains('id', $user->rank_id);
             if (!$isCertified) {

@@ -43,7 +43,7 @@ class JumpseatController extends Controller
     
     public function create()
     {
-        if (!setting('vms_open_ops_jumpseat_enabled', true)) {
+        if (!setting('vms_open_ops_jumpseat_enabled', config('vmsopenops.jumpseat.enabled'))) {
             Flash::error('Jumpseat operations are currently disabled.');
             return redirect()->route('frontend.dashboard.index');
         }
@@ -61,9 +61,9 @@ class JumpseatController extends Controller
         // Obtener el balance del piloto
         $balance = $user->journal->balance ?? new Money(0);
         
-        $costPerNm = setting('vms_open_ops_jumpseat_cost_per_nm', 250);
-        $requireReason = setting('vms_open_ops_require_reason', true);
-        $maxReasonLength = setting('vms_open_ops_max_reason_length', 500);
+        $costPerNm = setting('vms_open_ops_jumpseat_cost_per_nm', config('vmsopenops.jumpseat.cost_per_nm'));
+        $requireReason = setting('vms_open_ops_require_reason', config('vmsopenops.require_reason'));
+        $maxReasonLength = setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length'));
         
         return view('vmsopenops::frontend.jumpseat.create', compact(
             'user',
@@ -76,13 +76,13 @@ class JumpseatController extends Controller
     
     public function store(Request $request)
     {
-        if (!setting('vms_open_ops_jumpseat_enabled', true)) {
+        if (!setting('vms_open_ops_jumpseat_enabled', config('vmsopenops.jumpseat.enabled'))) {
             Flash::error('Jumpseat operations are currently disabled.');
             return redirect()->route('frontend.dashboard.index');
         }
         
-        $requireReason = setting('vms_open_ops_require_reason', true);
-        $maxReasonLength = setting('vms_open_ops_max_reason_length', 500);
+        $requireReason = setting('vms_open_ops_require_reason', config('vmsopenops.require_reason'));
+        $maxReasonLength = setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length'));
         
         $rules = [
             'to_airport_id' => 'required|exists:airports,id',
@@ -259,63 +259,5 @@ class JumpseatController extends Controller
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         
         return round($earthRadius * $c, 2);
-    }
-
-    /**
-     * AJAX preview for jumpseat cost
-     */
-    public function preview(Request $request)
-    {
-        try {
-            $request->validate([
-                'to_airport_id' => 'required|exists:airports,id',
-            ]);
-            
-            $user = Auth::user();
-            $fromAirport = Airport::find($user->curr_airport_id);
-            $toAirport = Airport::find($request->to_airport_id);
-            
-            if (!$fromAirport) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Current airport not found'
-                ], 400);
-            }
-            
-            $distance = $this->calculateDistance(
-                $fromAirport->lat, $fromAirport->lon,
-                $toAirport->lat, $toAirport->lon
-            );
-            
-            $cost = new Money(OpsPricing::jumpseatCostCents($distance));
-            $userBalance = $user->journal->balance ?? new Money(0);
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'distance' => [
-                        'value' => $distance,
-                        'formatted' => number_format($distance, 2) . ' NM'
-                    ],
-                    'cost' => [
-                        'value' => $cost->getValue(),
-                        'formatted' => $cost->money->formatForHumans(),
-                    ],
-                    'user_balance' => [
-                        'value' => $userBalance->getValue(),
-                        'formatted' => $userBalance->money->formatForHumans(),
-                    ],
-                    'can_pay_immediately' => $userBalance->getValue() >= $cost->getValue(),
-                    'is_same_airport' => $fromAirport->id === $toAirport->id,
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Preview error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
     }
 }

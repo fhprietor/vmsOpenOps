@@ -8,8 +8,9 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/', 'JumpseatController@index')->name('jumpseat.index');
         Route::get('/create', 'JumpseatController@create')->name('jumpseat.create');
         Route::post('/', 'JumpseatController@store')->name('jumpseat.store');
-        Route::post('/preview', 'JumpseatController@preview')->name('jumpseat.preview');  // <-- Esta línea debe estar
         Route::delete('/{id}', 'JumpseatController@cancel')->name('jumpseat.cancel');
+        // El preview lo sirve la API (api.vmsopenops.api.jumpseat.preview); la
+        // vista usa ese endpoint, asi que aqui no se duplica.
     });
     
     // Ferry routes

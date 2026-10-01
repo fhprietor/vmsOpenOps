@@ -22,8 +22,8 @@ class OpsPricing
      */
     public static function jumpseatCostCents(float $distanceNm): int
     {
-        $costPerNm = (int) setting('vms_open_ops_jumpseat_cost_per_nm', 250);
-        $minCost = (int) setting('vms_open_ops_jumpseat_min_cost', 5000);
+        $costPerNm = (int) setting('vms_open_ops_jumpseat_cost_per_nm', config('vmsopenops.jumpseat.cost_per_nm'));
+        $minCost = (int) setting('vms_open_ops_jumpseat_min_cost', config('vmsopenops.jumpseat.min_cost'));
 
         return max((int) round($distanceNm * $costPerNm), $minCost);
     }
@@ -33,7 +33,7 @@ class OpsPricing
      */
     public static function ferryCostCents(float $distanceNm, ?Aircraft $aircraft = null): int
     {
-        $costPerNm = (int) setting('vms_open_ops_ferry_cost_per_nm', 500);
+        $costPerNm = (int) setting('vms_open_ops_ferry_cost_per_nm', config('vmsopenops.ferry.cost_per_nm'));
 
         return max((int) round($distanceNm * $costPerNm), self::ferryMinCostCents($aircraft));
     }
@@ -49,17 +49,17 @@ class OpsPricing
         }
 
         if (!$mtowKg) {
-            return (int) setting('vms_open_ops_ferry_min_cost_medium', 50000);
+            return (int) setting('vms_open_ops_ferry_min_cost_medium', config('vmsopenops.ferry.min_cost_medium'));
         }
 
         if ($mtowKg <= 7000) {
-            return (int) setting('vms_open_ops_ferry_min_cost_light', 20000);
+            return (int) setting('vms_open_ops_ferry_min_cost_light', config('vmsopenops.ferry.min_cost_light'));
         }
 
         if ($mtowKg <= 136000) {
-            return (int) setting('vms_open_ops_ferry_min_cost_medium', 50000);
+            return (int) setting('vms_open_ops_ferry_min_cost_medium', config('vmsopenops.ferry.min_cost_medium'));
         }
 
-        return (int) setting('vms_open_ops_ferry_min_cost_heavy', 100000);
+        return (int) setting('vms_open_ops_ferry_min_cost_heavy', config('vmsopenops.ferry.min_cost_heavy'));
     }
 }

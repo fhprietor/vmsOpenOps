@@ -46,7 +46,7 @@ class FerryController extends Controller
     
     public function create()
     {
-        if (!setting('vms_open_ops_ferry_enabled', true)) {
+        if (!setting('vms_open_ops_ferry_enabled', config('vmsopenops.ferry.enabled'))) {
             Flash::error('Ferry operations are currently disabled.');
             return redirect()->route('frontend.dashboard.index');
         }
@@ -67,7 +67,7 @@ class FerryController extends Controller
             return redirect()->route('frontend.dashboard.index');
         }
         
-        $requireCertification = setting('vms_open_ops_ferry_require_certification', true);
+        $requireCertification = setting('vms_open_ops_ferry_require_certification', config('vmsopenops.ferry.require_certification'));
         
         // Obtener subfleets donde:
         // 1. Tengan aeronaves en tierra (PARKED) en otros aeropuertos
@@ -92,9 +92,9 @@ class FerryController extends Controller
         }
         
         $balance = $user->journal->balance ?? new Money(0);
-        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', 500);
-        $requireReason = setting('vms_open_ops_require_reason', true);
-        $maxReasonLength = setting('vms_open_ops_max_reason_length', 500);
+        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', config('vmsopenops.ferry.cost_per_nm'));
+        $requireReason = setting('vms_open_ops_require_reason', config('vmsopenops.require_reason'));
+        $maxReasonLength = setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length'));
         
         return view('vmsopenops::frontend.ferry.create', compact(
             'user',
@@ -107,66 +107,15 @@ class FerryController extends Controller
         ));
     }
     
-    public function preview(Request $request)
-    {
-        $request->validate([
-            'aircraft_id' => 'required|exists:aircraft,id',
-        ]);
-        
-        $user = Auth::user();
-        $aircraft = Aircraft::with('airport')->find($request->aircraft_id);
-        $userAirport = Airport::find($user->curr_airport_id);
-        
-        if (!$userAirport || !$aircraft) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Airport or aircraft not found'
-            ], 400);
-        }
-        
-        $distance = $this->calculateDistance(
-            $userAirport->lat,
-            $userAirport->lon,
-            $aircraft->airport->lat,
-            $aircraft->airport->lon
-        );
-        
-        $cost = new Money(OpsPricing::ferryCostCents($distance, $aircraft));
-        $userBalance = $user->journal->balance ?? new Money(0);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'aircraft_id' => $aircraft->id,
-                'registration' => $aircraft->registration,
-                'current_airport' => $aircraft->airport_id,
-                'distance' => [
-                    'value' => $distance,
-                    'formatted' => number_format($distance, 2) . ' NM'
-                ],
-                'cost' => [
-                    'value' => $cost->getValue(),
-                    'formatted' => $cost->money->formatForHumans(),
-                ],
-                'user_balance' => [
-                    'value' => $userBalance->getValue(),
-                    'formatted' => $userBalance->money->formatForHumans(),
-                ],
-                'can_pay_immediately' => $userBalance->getValue() >= $cost->getValue(),
-                'is_same_airport' => $aircraft->airport_id === $userAirport->id,
-            ]
-        ]);
-    }
-    
     public function store(Request $request)
     {
-        if (!setting('vms_open_ops_ferry_enabled', true)) {
+        if (!setting('vms_open_ops_ferry_enabled', config('vmsopenops.ferry.enabled'))) {
             Flash::error('Ferry operations are currently disabled.');
             return redirect()->route('frontend.dashboard.index');
         }
         
-        $requireReason = setting('vms_open_ops_require_reason', true);
-        $maxReasonLength = setting('vms_open_ops_max_reason_length', 500);
+        $requireReason = setting('vms_open_ops_require_reason', config('vmsopenops.require_reason'));
+        $maxReasonLength = setting('vms_open_ops_max_reason_length', config('vmsopenops.max_reason_length'));
         
         $rules = [
             'aircraft_id' => 'required|exists:aircraft,id',
@@ -229,7 +178,7 @@ class FerryController extends Controller
         }
         
         // Verificar certificación del piloto
-        $requireCertification = setting('vms_open_ops_ferry_require_certification', true);
+        $requireCertification = setting('vms_open_ops_ferry_require_certification', config('vmsopenops.ferry.require_certification'));
         if ($requireCertification) {
             $isCertified = $aircraft->subfleet->ranks->contains('id', $user->rank_id);
             if (!$isCertified) {
