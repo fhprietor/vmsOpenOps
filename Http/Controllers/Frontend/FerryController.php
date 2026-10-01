@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use Laracasts\Flash\Flash;
 use Modules\VmsOpenOps\Models\OperationRequest;
 use Modules\VmsOpenOps\Notifications\OperationRequested;
+use Modules\VmsOpenOps\Support\OpsPricing;
 
 class FerryController extends Controller
 {
@@ -130,9 +131,7 @@ class FerryController extends Controller
             $aircraft->airport->lon
         );
         
-        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', 500);
-        $costCents = max((int) round($distance * $costPerNm), $this->getMinFerryCostCents($aircraft));
-        $cost = new Money($costCents);
+        $cost = new Money(OpsPricing::ferryCostCents($distance, $aircraft));
         $userBalance = $user->journal->balance ?? new Money(0);
 
         return response()->json([
@@ -247,9 +246,7 @@ class FerryController extends Controller
             $aircraft->airport->lon
         );
         
-        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', 500);
-        $costCents = max((int) round($distance * $costPerNm), $this->getMinFerryCostCents($aircraft));
-        $cost = new Money($costCents);
+        $cost = new Money(OpsPricing::ferryCostCents($distance, $aircraft));
 
         $userBalance = $user->journal->balance ?? new Money(0);
         $isImmediate = $request->type == 1;
@@ -368,28 +365,6 @@ class FerryController extends Controller
         return redirect()->route('vmsopenops.ferry.index');
     }
     
-    private function getMinFerryCostCents(Aircraft $aircraft): int
-    {
-        $mtowKg = null;
-        if ($aircraft->mtow) {
-            $mtowKg = $aircraft->mtow->toUnit('kg');
-        }
-
-        if (!$mtowKg) {
-            return (int) setting('vms_open_ops_ferry_min_cost_medium', 50000);
-        }
-
-        if ($mtowKg <= 7000) {
-            return (int) setting('vms_open_ops_ferry_min_cost_light', 20000);
-        }
-
-        if ($mtowKg <= 136000) {
-            return (int) setting('vms_open_ops_ferry_min_cost_medium', 50000);
-        }
-
-        return (int) setting('vms_open_ops_ferry_min_cost_heavy', 100000);
-    }
-
     private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
     {
         $earthRadius = 3440.07;

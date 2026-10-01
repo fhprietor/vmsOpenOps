@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Laracasts\Flash\Flash;
 use Modules\VmsOpenOps\Models\OperationRequest;
 use Modules\VmsOpenOps\Notifications\OperationRequested;
+use Modules\VmsOpenOps\Support\OpsPricing;
 
 class JumpseatController extends Controller
 {
@@ -133,10 +134,7 @@ class JumpseatController extends Controller
             $toAirport->lon
         );
         
-        $costPerNm  = setting('vms_open_ops_jumpseat_cost_per_nm', 250);
-        $minCents   = (int) setting('vms_open_ops_jumpseat_min_cost', 5000);
-        $costCents  = max((int) round($distance * $costPerNm), $minCents);
-        $cost       = new Money($costCents);
+        $cost = new Money(OpsPricing::jumpseatCostCents($distance));
 
         $userBalance = $user->journal->balance ?? new Money(0);
         $isImmediate = $request->type == 1;
@@ -289,10 +287,7 @@ class JumpseatController extends Controller
                 $toAirport->lat, $toAirport->lon
             );
             
-            $costPerNm = setting('vms_open_ops_jumpseat_cost_per_nm', 250);
-            $minCents  = (int) setting('vms_open_ops_jumpseat_min_cost', 5000);
-            $costCents = max((int) round($distance * $costPerNm), $minCents);
-            $cost      = new Money($costCents);
+            $cost = new Money(OpsPricing::jumpseatCostCents($distance));
             $userBalance = $user->journal->balance ?? new Money(0);
             
             return response()->json([

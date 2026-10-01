@@ -4,7 +4,6 @@ namespace Modules\VmsOpenOps\Http\Controllers\Admin;
 
 use App\Contracts\Controller;
 use App\Models\Enums\AircraftState;
-use App\Models\Enums\AircraftStatus;
 use App\Services\FinanceService;
 use App\Support\Money;
 use Illuminate\Http\Request;
@@ -181,7 +180,7 @@ public function approve($id, Request $request)
         try {
             // Jumpseat settings
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.jumpseat.enabled'],
+                ['id' => 'vms_open_ops_jumpseat_enabled', 'key' => 'vms_open_ops.jumpseat.enabled'],
                 [
                     'value' => $validated['jumpseat_enabled'] ? 'true' : 'false',
                     'name' => 'Enable Jumpseat Operations',
@@ -192,7 +191,7 @@ public function approve($id, Request $request)
             );
             
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.jumpseat.cost_per_nm'],
+                ['id' => 'vms_open_ops_jumpseat_cost_per_nm', 'key' => 'vms_open_ops.jumpseat.cost_per_nm'],
                 [
                     'value' => (string) $validated['jumpseat_cost_per_nm'],
                     'name' => 'Jumpseat Cost per NM',
@@ -203,7 +202,7 @@ public function approve($id, Request $request)
             );
 
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.jumpseat.min_cost'],
+                ['id' => 'vms_open_ops_jumpseat_min_cost', 'key' => 'vms_open_ops.jumpseat.min_cost'],
                 [
                     'value' => (string) $validated['jumpseat_min_cost'],
                     'name' => 'Jumpseat Minimum Cost',
@@ -215,7 +214,7 @@ public function approve($id, Request $request)
 
             // Ferry settings
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.ferry.enabled'],
+                ['id' => 'vms_open_ops_ferry_enabled', 'key' => 'vms_open_ops.ferry.enabled'],
                 [
                     'value' => $validated['ferry_enabled'] ? 'true' : 'false',
                     'name' => 'Enable Ferry Operations',
@@ -226,7 +225,7 @@ public function approve($id, Request $request)
             );
             
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.ferry.cost_per_nm'],
+                ['id' => 'vms_open_ops_ferry_cost_per_nm', 'key' => 'vms_open_ops.ferry.cost_per_nm'],
                 [
                     'value' => (string) $validated['ferry_cost_per_nm'],
                     'name' => 'Ferry Cost per NM',
@@ -237,7 +236,7 @@ public function approve($id, Request $request)
             );
 
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.ferry.min_cost_light'],
+                ['id' => 'vms_open_ops_ferry_min_cost_light', 'key' => 'vms_open_ops.ferry.min_cost_light'],
                 [
                     'value' => (string) $validated['ferry_min_cost_light'],
                     'name' => 'Ferry Minimum Cost (Light)',
@@ -248,7 +247,7 @@ public function approve($id, Request $request)
             );
 
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.ferry.min_cost_medium'],
+                ['id' => 'vms_open_ops_ferry_min_cost_medium', 'key' => 'vms_open_ops.ferry.min_cost_medium'],
                 [
                     'value' => (string) $validated['ferry_min_cost_medium'],
                     'name' => 'Ferry Minimum Cost (Medium)',
@@ -259,7 +258,7 @@ public function approve($id, Request $request)
             );
 
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.ferry.min_cost_heavy'],
+                ['id' => 'vms_open_ops_ferry_min_cost_heavy', 'key' => 'vms_open_ops.ferry.min_cost_heavy'],
                 [
                     'value' => (string) $validated['ferry_min_cost_heavy'],
                     'name' => 'Ferry Minimum Cost (Heavy)',
@@ -270,7 +269,7 @@ public function approve($id, Request $request)
             );
 
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.ferry.require_certification'],
+                ['id' => 'vms_open_ops_ferry_require_certification', 'key' => 'vms_open_ops.ferry.require_certification'],
                 [
                     'value' => $validated['ferry_require_certification'] ? 'true' : 'false',
                     'name' => 'Require Aircraft Certification',
@@ -282,7 +281,7 @@ public function approve($id, Request $request)
             
             // Common settings
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.require_reason'],
+                ['id' => 'vms_open_ops_require_reason', 'key' => 'vms_open_ops.require_reason'],
                 [
                     'value' => $validated['require_reason'] ? 'true' : 'false',
                     'name' => 'Require Reason',
@@ -293,7 +292,7 @@ public function approve($id, Request $request)
             );
             
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.max_reason_length'],
+                ['id' => 'vms_open_ops_max_reason_length', 'key' => 'vms_open_ops.max_reason_length'],
                 [
                     'value' => (string) $validated['max_reason_length'],
                     'name' => 'Max Reason Length',
@@ -305,7 +304,7 @@ public function approve($id, Request $request)
             
             // Discord Staff Webhook setting (NUEVO)
             \App\Models\Setting::updateOrCreate(
-                ['key' => 'vms_open_ops.discord_staff_webhook'],
+                ['id' => 'vms_open_ops_discord_staff_webhook', 'key' => 'vms_open_ops.discord_staff_webhook'],
                 [
                     'value' => $validated['discord_staff_webhook'] ?? '',
                     'name' => 'Discord Staff Webhook URL',

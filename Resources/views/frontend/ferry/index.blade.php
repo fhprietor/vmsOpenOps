@@ -43,7 +43,6 @@
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
-                            要
                                 <th>Date</th>
                                 <th>Aircraft</th>
                                 <th>From → To</th>

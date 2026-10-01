@@ -25,7 +25,8 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/create', 'CharterController@create')->name('charter.create');
         Route::post('/', 'CharterController@store')->name('charter.store');
         Route::post('/preview', 'CharterController@preview')->name('charter.preview');
-        Route::post('/aircraft', 'CharterController@getAvailableAircraft')->name('charter.aircraft');
+        // Se elimino POST /charter/aircraft: apuntaba a CharterController@getAvailableAircraft,
+        // que no existe, y ninguna vista lo usaba (la lista de aeronaves la pasa create()).
     });
 
     // STATISTICS route

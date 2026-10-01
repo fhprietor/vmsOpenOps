@@ -43,6 +43,24 @@ el staff, control de saldo y estadísticas.
   coste lo absorbe la aerolínea (comportamiento deliberado, documentado en el
   controlador de admin).
 
+### Precios
+
+Hay una **única** implementación del cálculo:
+`Modules\VmsOpenOps\Support\OpsPricing` (en centavos). La usan el frontend y la
+API, así que lo que se cotiza es lo que se cobra.
+
+| Operación | Fórmula |
+|---|---|
+| Jumpseat | `max(round(distancia_NM × precio_NM), minimo)` |
+| Ferry | `max(round(distancia_NM × precio_NM), minimo_por_MTOW)` |
+
+`minimo_por_MTOW` (ferry): ≤ 7.000 kg → ligero; ≤ 136.000 kg → medio; por encima
+→ pesado; sin MTOW → medio. Todos los importes en **centavos**.
+
+> Antes cada controlador lo calculaba por su cuenta y el ferry por API
+> multiplicaba por 100 (la vista cotizaba con la API y el cobro lo hacía el
+> frontend, con lo que el precio mostrado podía no ser el cobrado).
+
 ## Rutas
 
 ### Piloto — prefijo `vmsopenops` (`web`, y `auth` en el grupo)
@@ -61,8 +79,10 @@ el staff, control de saldo y estadísticas.
 | GET | `/vmsopenops/charter/create` | `Frontend\CharterController@create` |
 | POST | `/vmsopenops/charter` | `@store` |
 | POST | `/vmsopenops/charter/preview` | `@preview` |
-| POST | `/vmsopenops/charter/aircraft` | `@getAvailableAircraft` — **el método no existe (roto)** |
 | GET | `/vmsopenops/stats` | `Frontend\StatisticsController@index` |
+
+> `POST /vmsopenops/charter/aircraft` se **eliminó**: apuntaba a un método
+> inexistente y ninguna vista lo usaba (las aeronaves las pasa `create()`).
 
 ### Admin — prefijo `admin/vmsopenops` (`web` + `ability:admin,admin-access`)
 
@@ -79,13 +99,13 @@ el staff, control de saldo y estadísticas.
 | Método | URI | Controlador@método |
 |---|---|---|
 | GET | `/api/vmsopenops/operations` | `Api\OperationsController@index` |
-| GET | `/api/vmsopenops/operations/pending` | `@checkPending` — **roto, ver Notas** |
+| GET | `/api/vmsopenops/operations/pending` | `@checkPending` |
 | GET | `/api/vmsopenops/user/balance` | `@getUserBalance` |
 | POST | `/api/vmsopenops/jumpseat/preview` | `@previewJumpseat` |
 | POST | `/api/vmsopenops/jumpseat` | `@storeJumpseat` |
 | POST | `/api/vmsopenops/ferry/available` | `@getAvailableAircraft` |
 | POST | `/api/vmsopenops/ferry/preview` | `@previewFerry` |
-| POST | `/api/vmsopenops/ferry` | `@storeFerry` — **roto, ver Notas** |
+| POST | `/api/vmsopenops/ferry` | `@storeFerry` |
 | DELETE | `/api/vmsopenops/{id}` | `@cancel` |
 | GET | `/api/vmsopenops/stats` | `Api\StatisticsController@getData` |
 
@@ -124,21 +144,21 @@ documentación de los valores previstos).
 |---|---|---|
 | `vms_open_ops.jumpseat.enabled` | sí (`true`) | `true` |
 | `vms_open_ops.jumpseat.cost_per_nm` | sí (`250`) | `250` |
-| `vms_open_ops.jumpseat.min_cost` | **no** | `5000` |
+| `vms_open_ops.jumpseat.min_cost` | sí (`5000`, mig. 000003) | `5000` |
 | `vms_open_ops.ferry.enabled` | sí (`true`) | `true` |
 | `vms_open_ops.ferry.cost_per_nm` | sí (`500`) | `500` |
-| `vms_open_ops.ferry.min_cost_light` | **no** | `20000` |
-| `vms_open_ops.ferry.min_cost_medium` | **no** | `50000` |
-| `vms_open_ops.ferry.min_cost_heavy` | **no** | `100000` |
+| `vms_open_ops.ferry.min_cost_light` | sí (`20000`, mig. 000003) | `20000` |
+| `vms_open_ops.ferry.min_cost_medium` | sí (`50000`, mig. 000003) | `50000` |
+| `vms_open_ops.ferry.min_cost_heavy` | sí (`100000`, mig. 000003) | `100000` |
 | `vms_open_ops.ferry.require_certification` | sí (`true`) | `true` |
 | `vms_open_ops.require_reason` | sí (`true`) | `true` |
 | `vms_open_ops.max_reason_length` | sí (`500`) | `500` |
-| `vms_open_ops.discord_staff_webhook` | **no** (se crea al guardar el admin) | `''` |
+| `vms_open_ops.discord_staff_webhook` | no (se crea al guardar el admin) | `''` |
 
-Los importes van en **centavos** (convención de finanzas de phpVMS). Nota: el
-formulario de admin gestiona las 11 claves, pero la migración solo siembra 7; las
-4 restantes existen únicamente como valor por defecto en código hasta que un
-admin guarde el formulario.
+Los importes van en **centavos** (convención de finanzas de phpVMS). La
+migración `2024_01_01_000003_add_missing_operations_settings.php` completa las
+cuatro claves que antes solo existían como valor por defecto en código, de modo
+que ahora las 11 aparecen y se ajustan desde Admin → Settings.
 
 ## Instalación
 
@@ -184,35 +204,39 @@ en inglés escritos a mano.
 
 ## Notas y deuda técnica
 
-Defectos verificados, pendientes de arreglar:
+### Arreglado (2026-09-30)
 
-1. **`GET /api/vmsopenops/operations/pending` está roto**: llama a
-   `OperationRequest::pendingForUser()`, que no existe (solo hay `scopePending` y
-   `scopeForUser`). Devuelve 500.
-2. **`POST /vmsopenops/charter/aircraft` está roto**: la ruta apunta a
-   `CharterController@getAvailableAircraft`, que no está definido (el método
-   equivalente está en el controlador de la API). Ninguna vista lo usa.
-3. **El ferry por API no se puede pedir**: `Api\OperationsController::storeFerry`
-   compara `$aircraft->status` (columna `'A'`) con `AircraftState::PARKED` (`0`),
-   así que siempre responde 400 "aeronave no disponible". El controlador de
-   frontend lo hace bien con `$aircraft->state`.
-4. **El precio del ferry diverge entre API y frontend**: la API multiplica por
-   100 de más en `storeFerry`, y en `previewFerry`/`getAvailableAircraft` solo si
-   el valor guardado es < 100. La vista de ferry **cotiza con la API** pero
-   **guarda con la ruta de frontend**, por lo que el precio mostrado puede
-   diferir del cobrado.
-5. **Faltan filas de settings**: `jumpseat.min_cost` y los tres
-   `ferry.min_cost_*` no se siembran.
-6. **Código muerto**: `Frontend\StatisticsController@getData()` no tiene ruta y
-   consulta columnas inexistentes (`pireps.passengers`/`pireps.cargo`); la versión
-   buena es la de la API (usa `pirep_fares` + `FareType`).
-7. **Fila de settings huérfana**: existe una fila duplicada con `id` vacío para
-   `vms_open_ops.jumpseat.enabled` (resto de una migración anterior).
-8. **Carácter suelto `要`** como primer hijo de `<thead>` en
-   `admin/index.blade.php`, `frontend/jumpseat/index.blade.php` y
-   `frontend/ferry/index.blade.php`.
-9. Guardas redundantes: `ability:admin,admin-access` está aplicada en el grupo de
-   rutas, otra vez en `admin.php` y una tercera en el constructor del
-   controlador de admin.
-10. `vms_open_ops.discord_staff_webhook` es un **secreto** guardado en la tabla
-    `settings`: no debe acabar en git.
+1. **`GET /api/vmsopenops/operations/pending` devolvía 500**: llamaba a
+   `OperationRequest::pendingForUser()`, que no existe. Ahora usa
+   `pending()->forUser()` con filtro opcional por tipo.
+2. **`POST /vmsopenops/charter/aircraft`**: apuntaba a un método inexistente y
+   ninguna vista lo usaba → **ruta eliminada**.
+3. **El ferry por API no se podía pedir**: comparaba `status` (`'A'`) con
+   `AircraftState::PARKED` (`0`) y respondía 400 siempre. Ahora exige
+   `state = PARKED` **y** `status = ACTIVE`, igual que el frontend.
+4. **Precios unificados** en `Support\OpsPricing` (ver «Precios»): el ferry por
+   API ya no multiplica por 100 y la vista cotiza lo mismo que se cobra.
+5. **Sembradas las 4 claves de settings** que faltaban (migración `000003`): las
+   11 aparecen ya en Admin → Settings.
+6. **`updateSettings` escribía por `key` sin `id`**: en una base sin la fila
+   previa creaba una fila con `id` vacío (de ahí la huérfana) que además salía en
+   el formulario de admin sin nombre. Ahora busca y crea **por `id`**.
+7. **Fila de settings huérfana**: la migración `000003` la elimina.
+8. **Código muerto**: `Frontend\StatisticsController` solo conserva `index()`; su
+   `getData()` sin ruta (que consultaba columnas inexistentes
+   `pireps.passengers`/`pireps.cargo`) y sus helpers se han eliminado.
+9. **Caracteres sueltos `要`** eliminados de los tres `<thead>`, y quitado el
+   import sin usar `AircraftStatus` del controlador de admin.
+
+### Pendiente
+
+- Guardas redundantes: `ability:admin,admin-access` está en el grupo de rutas y
+  repetida en `admin.php` (y en el constructor del controlador de admin): es
+  inocuo, pero sobra.
+- `Config/config.php` sigue **sin leerse** en runtime (los valores salen de
+  `settings`); o se usa como fuente de defaults o se elimina.
+- `Frontend\FerryController@preview` no tiene ruta (la vista de ferry cotiza con
+  la API). Hoy es coherente con `OpsPricing`, pero es código muerto.
+- El módulo no tiene `Services/` ni tests.
+- `vms_open_ops.discord_staff_webhook` es un **secreto** guardado en la tabla
+  `settings`: no debe acabar en git.

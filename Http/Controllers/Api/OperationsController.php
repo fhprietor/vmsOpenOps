@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Modules\VmsOpenOps\Models\OperationRequest;
 use Modules\VmsOpenOps\Notifications\OperationRequested;
+use Modules\VmsOpenOps\Support\OpsPricing;
 
 class OperationsController extends Controller
 {
@@ -67,8 +68,13 @@ class OperationsController extends Controller
             'data' => [
                 'has_pending' => $hasPending,
                 'pending_count' => $pendingCount,
-                'pending_requests' => OperationRequest::pendingForUser($userId, $type)
+                'pending_requests' => OperationRequest::pending()
+                    ->forUser($userId)
+                    ->when($type, function ($query) use ($type) {
+                        $query->where('operation_type', $type);
+                    })
                     ->with(['fromAirport', 'toAirport', 'aircraft'])
+                    ->orderByDesc('created_at')
                     ->get()
             ]
         ]);
@@ -124,8 +130,7 @@ class OperationsController extends Controller
             $toAirport->lon
         );
         
-        $costPerNm = setting('vms_open_ops_jumpseat_cost_per_nm', 250);
-        $cost = new Money($distance * $costPerNm);
+        $cost = new Money(OpsPricing::jumpseatCostCents($distance));
         $userBalance = $user->journal->balance ?? new Money(0);
         
         return response()->json([
@@ -182,11 +187,7 @@ class OperationsController extends Controller
             $aircraft->airport->lon
         );
         
-        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', 500);
-        if ($costPerNm < 100) {
-            $costPerNm = $costPerNm * 100;
-        }
-        $cost = new Money($distance * $costPerNm);
+        $cost = new Money(OpsPricing::ferryCostCents($distance, $aircraft));
         $userBalance = $user->journal->balance ?? new Money(0);
         
         return response()->json([
@@ -260,8 +261,7 @@ class OperationsController extends Controller
             $toAirport->lon
         );
         
-        $costPerNm = setting('vms_open_ops_jumpseat_cost_per_nm', 250);
-        $cost = new Money($distance * $costPerNm);
+        $cost = new Money(OpsPricing::jumpseatCostCents($distance));
         
         $userBalance = $user->journal->balance ?? new Money(0);
         $isImmediate = $request->type == 1;
@@ -376,7 +376,10 @@ class OperationsController extends Controller
             return response()->json(['success' => false, 'message' => 'Aircraft not found'], 404);
         }
         
-        if ($aircraft->status != AircraftState::PARKED) {
+        // OJO: 'state' es el estado operativo (PARKED/IN_USE/IN_AIR) y 'status' el
+        // estado de la aeronave (ACTIVE/MAINTENANCE). Antes se comparaba 'status'
+        // con AircraftState::PARKED ('A' vs 0) y el ferry por API nunca funcionaba.
+        if ($aircraft->state != AircraftState::PARKED || $aircraft->status != AircraftStatus::ACTIVE) {
             return response()->json(['success' => false, 'message' => 'Aircraft not available for ferry'], 400);
         }
         
@@ -401,8 +404,7 @@ class OperationsController extends Controller
             $aircraft->airport->lon
         );
         
-        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', 500);
-        $cost = new Money($distance * $costPerNm * 100);
+        $cost = new Money(OpsPricing::ferryCostCents($distance, $aircraft));
         
         $userBalance = $user->journal->balance ?? new Money(0);
         $isImmediate = $request->type == 1;
@@ -421,7 +423,7 @@ class OperationsController extends Controller
                 }
                 
                 $freshAircraft = Aircraft::with('airport')->find($aircraft->id);
-                if ($freshAircraft->status != AircraftState::PARKED) {
+                if ($freshAircraft->state != AircraftState::PARKED || $freshAircraft->status != AircraftStatus::ACTIVE) {
                     throw new \Exception('Aircraft no longer available');
                 }
                 
@@ -575,11 +577,6 @@ class OperationsController extends Controller
             ], 404);
         }
         
-        $costPerNm = setting('vms_open_ops_ferry_cost_per_nm', 500);
-        if ($costPerNm < 100) {
-            $costPerNm = $costPerNm * 100;
-        }
-        
         $aircraftData = [];
         
         foreach ($aircraft as $ac) {
@@ -590,7 +587,7 @@ class OperationsController extends Controller
                 $ac->airport->lon
             );
             
-            $cost = new Money($distance * $costPerNm);
+            $cost = new Money(OpsPricing::ferryCostCents($distance, $ac));
             
             $aircraftData[] = [
                 'id' => $ac->id,
