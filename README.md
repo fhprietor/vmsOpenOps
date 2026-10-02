@@ -27,7 +27,7 @@ el staff, control de saldo y estadísticas.
 | **Charter** | Crea un vuelo charter (`Flight` inactivo/invisible) y su `Bid` desde el panel del piloto. Sin listado propio: solo el formulario. |
 | **Aprobaciones** | El staff aprueba/rechaza con notas. `status`: 0 pendiente, 1 aprobado, 2 rechazado. `type`: 0 solicitud, 1 inmediato (con cobro). |
 | **Saldo** | Consulta el balance del piloto y permite cobrar al momento o dejar la solicitud pendiente. |
-| **Estadísticas** | `/vmsopenops/stats` + `GET /api/vmsopenops/stats`: top score, millas, nº de vuelos, rutas, subflotas, aeronaves y aeropuertos; caché 5 min. |
+| **Estadísticas** | `/vmsopenops/stats` (**página pública**) con dos bloques: arriba los **totales históricos de la compañía** (14 tarjetas: pilotos con PIREP, pilotos activos y del mes, aeronaves, vuelos programados, rutas únicas, PIREPs aceptados, vuelos hoy/ayer, horas voladas, destinos, combustible en kg, distancia y hubs) que se renderizan en el HTML y se cachean 15 min; abajo los **rankings por periodo** (top score, millas, nº de vuelos, rutas, subflotas, aeronaves y aeropuertos, caché 5 min) vía `GET /api/vmsopenops/stats`, que sigue detrás de `auth` y sólo se carga con sesión. |
 | **Notificaciones** | Correo y Discord: `OperationRequested` y `OperationApproved`, canal `discord_webhook`. |
 
 **Enlaces de menú** que registra el módulo (`ModuleService`): Jumpseat
@@ -78,7 +78,7 @@ API, así que lo que se cotiza es lo que se cobra.
 | GET | `/vmsopenops/charter/create` | `Frontend\CharterController@create` |
 | POST | `/vmsopenops/charter` | `@store` |
 | POST | `/vmsopenops/charter/preview` | `@preview` |
-| GET | `/vmsopenops/stats` | `Frontend\StatisticsController@index` |
+| GET | `/vmsopenops/stats` | `Frontend\StatisticsController@index` (público: totales sin sesión) |
 
 > `POST /vmsopenops/charter/aircraft` se **eliminó**: apuntaba a un método
 > inexistente y ninguna vista lo usaba (las aeronaves las pasa `create()`).
@@ -106,7 +106,7 @@ API, así que lo que se cotiza es lo que se cobra.
 | POST | `/api/vmsopenops/ferry/preview` | `@previewFerry` |
 | POST | `/api/vmsopenops/ferry` | `@storeFerry` |
 | DELETE | `/api/vmsopenops/{id}` | `@cancel` |
-| GET | `/api/vmsopenops/stats` | `Api\StatisticsController@getData` |
+| GET | `/api/vmsopenops/stats` | `Api\StatisticsController@getData` (requiere sesión) |
 
 > Estos endpoints usan **sesión web + cookie** (y CSRF), **no** la API key
 > (`api.auth`). Sirven al JavaScript de las vistas del módulo; no son consumibles
