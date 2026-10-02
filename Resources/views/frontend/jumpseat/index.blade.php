@@ -80,7 +80,7 @@
                                             </form>
                                         @endif
                                         @if($request->status == 2 && $request->admin_notes)
-                                            <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#notesModal{{ $request->id }}">
+                                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#notesModal{{ $request->id }}">
                                                 Notes
                                             </button>
                                             <div class="modal fade" id="notesModal{{ $request->id }}" tabindex="-1">
@@ -88,7 +88,7 @@
                                                     <div class="modal-content">
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Admin Notes</h5>
-                                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                            <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
                                                         </div>
                                                         <div class="modal-body">
                                                             {{ $request->admin_notes }}
