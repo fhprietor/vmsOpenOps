@@ -137,8 +137,40 @@
   color: #c8d8ff;
   font-variant-numeric: tabular-nums;
 }
+.vh-stat-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1.1rem;
+}
 </style>
 
+{{-- Totales historicos de la compania. Se renderizan aqui (no via API), asi que los
+     ve tambien un invitado: la ruta de esta pagina es publica. --}}
+<div class="row g-3 mb-3">
+  @foreach(($companyTotals ?? []) as $tile)
+    <div class="col-6 col-md-4 col-xl-3">
+      <div class="card vholar-logbook-wrap h-100">
+        <div class="d-flex align-items-center gap-3 p-3">
+          <span class="vh-stat-icon" style="background: {{ $tile['color'] }};">
+            <i class="bi {{ $tile['icon'] }}"></i>
+          </span>
+          <span class="d-block">
+            <span class="d-block fw-bold" style="font-size: 1.05rem; line-height: 1.2;">{{ $tile['value'] }}</span>
+            <span class="d-block text-muted" style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;">{{ $tile['label'] }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  @endforeach
+</div>
+
+@auth
 <div class="row">
   {{-- Left column --}}
   <div class="col-lg-8">
@@ -197,9 +229,23 @@
     </div>
   </div>
 </div>
+@endauth
+
+@guest
+<div class="card vholar-logbook-wrap">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-bar-chart-line" style="font-size: 1.8rem; color: var(--vh-text-muted);"></i>
+    <p class="mt-3 mb-3 text-muted" style="font-size: 0.85rem;">
+      Los rankings por periodo (pilotos, rutas, aeronaves y aeropuertos) son solo para pilotos registrados.
+    </p>
+    <a href="{{ route('login') }}" class="btn btn-sm btn-primary">Iniciar sesion</a>
+  </div>
+</div>
+@endguest
 
 @endsection
 
+@auth
 @push('scripts')
 <script>
 $(document).ready(function() {
@@ -422,3 +468,4 @@ $(document).ready(function() {
 });
 </script>
 @endpush
+@endauth

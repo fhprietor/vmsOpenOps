@@ -2,6 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 
+// STATISTICS: pagina publica. Los totales historicos de la compania se renderizan en
+// el HTML, asi que se ven sin sesion. Los rankings por periodo (bloque de abajo) los
+// carga el JS desde la API, que sigue detras de auth: la vista los esconde a invitados.
+Route::prefix('stats')->group(function () {
+    Route::get('/', 'StatisticsController@index')->name('stats.index');
+});
+
 Route::group(['middleware' => ['auth']], function () {
     // Jumpseat routes
     Route::prefix('jumpseat')->group(function () {
@@ -28,10 +35,5 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('/preview', 'CharterController@preview')->name('charter.preview');
         // Se elimino POST /charter/aircraft: apuntaba a CharterController@getAvailableAircraft,
         // que no existe, y ninguna vista lo usaba (la lista de aeronaves la pasa create()).
-    });
-
-    // STATISTICS route
-    Route::prefix('stats')->group(function () {
-      Route::get('/', 'StatisticsController@index')->name('stats.index');
     });
 });
